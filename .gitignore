@@ -43,3 +43,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Release build artifacts and signing secrets
+/release/
+key.properties
+**/key.properties
+*.keystore
+**/*.keystore
+*.jks
+**/*.jks
