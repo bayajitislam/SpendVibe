@@ -1,9 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spend_vibe/core/utils/currency_formatter.dart';
 import 'package:spend_vibe/core/utils/date_helpers.dart';
 import 'package:spend_vibe/core/constants/app_categories.dart';
 import 'package:spend_vibe/features/budget/domain/entities/budget_entity.dart';
 import 'package:spend_vibe/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:spend_vibe/features/settings/presentation/providers/settings_provider.dart';
 
 void main() {
   group('SpendVibe Core Logic Unit Tests', () {
@@ -88,6 +92,39 @@ void main() {
       expect(updated.id, 'tx_123');
       expect(updated.amount, 30.0);
       expect(updated.title, 'Lunch');
+    });
+
+    test('SettingsNotifier loads and persists currency and themeMode', () async {
+      SharedPreferences.setMockInitialValues({
+        'selected_currency_code': 'EUR',
+        'selected_theme_mode': 'light',
+      });
+      final prefs = await SharedPreferences.getInstance();
+
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      // Verify loaded initial state
+      final initialSettings = container.read(settingsProvider);
+      expect(initialSettings.currency.code, 'EUR');
+      expect(initialSettings.currency.symbol, '€');
+      expect(initialSettings.themeMode, ThemeMode.light);
+
+      // Change currency to BDT
+      final bdt = CurrencyFormatter.supportedCurrencies.firstWhere((c) => c.code == 'BDT');
+      await container.read(settingsProvider.notifier).setCurrency(bdt);
+
+      expect(container.read(settingsProvider).currency.code, 'BDT');
+      expect(prefs.getString('selected_currency_code'), 'BDT');
+
+      // Change theme to dark
+      await container.read(settingsProvider.notifier).setThemeMode(ThemeMode.dark);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.dark);
+      expect(prefs.getString('selected_theme_mode'), 'dark');
     });
   });
 }
