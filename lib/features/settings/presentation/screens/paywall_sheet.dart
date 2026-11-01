@@ -306,7 +306,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
     }
 
     final monthlyPrice = monthlyProduct?.price ?? '\$1.99';
-    final lifetimePrice = lifetimeProduct?.price ?? '\$999.00';
+    final lifetimePrice = lifetimeProduct?.price ?? '\$99.99';
 
     return Row(
       children: [
@@ -467,7 +467,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
 
     final buttonLabel = _selectedPlan == ProPlanType.monthly
         ? 'Subscribe for ${selectedProduct?.price ?? "\$1.99/mo"}'
-        : 'Get Lifetime for ${selectedProduct?.price ?? "\$999.00"}';
+        : 'Get Lifetime for ${selectedProduct?.price ?? "\$99.99"}';
 
     return SizedBox(
       width: double.infinity,
