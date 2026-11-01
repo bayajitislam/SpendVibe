@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../purchases/purchase_service.dart';
 import 'ad_helper.dart';
 
 /// Singleton service managing AdMob SDK initialization, caching, and display
@@ -42,9 +43,22 @@ class AdService {
       _isInitialized = true;
       debugPrint('[AdService] Google Mobile Ads SDK initialized successfully (TestMode: ${AdHelper.isTestMode}).');
 
-      // Preload initial ads
-      loadInterstitialAd();
-      loadAppOpenAd();
+      // Listen for Pro status changes to clear cached ads
+      PurchaseService.instance.isProNotifier.addListener(() {
+        if (PurchaseService.instance.isPro) {
+          debugPrint('[AdService] User is Pro. Disposing all preloaded ads.');
+          _interstitialAd?.dispose();
+          _interstitialAd = null;
+          _appOpenAd?.dispose();
+          _appOpenAd = null;
+        }
+      });
+
+      // Preload initial ads only if not Pro
+      if (!PurchaseService.instance.isPro) {
+        loadInterstitialAd();
+        loadAppOpenAd();
+      }
     } catch (e) {
       debugPrint('[AdService] Failed to initialize Google Mobile Ads SDK: $e');
     }
@@ -56,7 +70,7 @@ class AdService {
 
   /// Preload an Interstitial Ad into memory
   void loadInterstitialAd() {
-    if (!_isInitialized || _isInterstitialLoading || _interstitialAd != null) {
+    if (PurchaseService.instance.isPro || !_isInitialized || _isInterstitialLoading || _interstitialAd != null) {
       return;
     }
 
@@ -100,6 +114,8 @@ class AdService {
   /// Triggered after user adds a transaction.
   /// Shows an interstitial ad once every [everyNTransactions] transactions (default: 3).
   void onTransactionAdded({int everyNTransactions = 3}) {
+    if (PurchaseService.instance.isPro) return;
+
     _transactionActionCount++;
     debugPrint('[AdService] Transaction added count: $_transactionActionCount');
 
@@ -110,10 +126,12 @@ class AdService {
   }
 
   int get transactionActionCount => _transactionActionCount;
-  bool get isInterstitialLoaded => _interstitialAd != null;
+  bool get isInterstitialLoaded => !PurchaseService.instance.isPro && _interstitialAd != null;
 
   /// Show cached Interstitial Ad if available. Returns true if shown.
   bool showInterstitialAd() {
+    if (PurchaseService.instance.isPro) return false;
+
     if (_interstitialAd != null) {
       _interstitialAd!.show();
       return true;
@@ -130,7 +148,7 @@ class AdService {
 
   /// Preload an App Open Ad
   void loadAppOpenAd() {
-    if (!_isInitialized || _isAppOpenLoading || isAppOpenAdAvailable) {
+    if (PurchaseService.instance.isPro || !_isInitialized || _isAppOpenLoading || isAppOpenAdAvailable) {
       return;
     }
 
@@ -179,7 +197,8 @@ class AdService {
 
   /// Whether a valid, non-expired App Open Ad is currently loaded
   bool get isAppOpenAdAvailable {
-    return _appOpenAd != null &&
+    return !PurchaseService.instance.isPro &&
+        _appOpenAd != null &&
         _appOpenLoadTime != null &&
         DateTime.now().difference(_appOpenLoadTime!) < _maxAdAge;
   }
@@ -187,7 +206,7 @@ class AdService {
   /// Show App Open Ad if available.
   /// Set [ignoreCooldown] to true for manual testing.
   bool showAppOpenAdIfAvailable({bool ignoreCooldown = false}) {
-    if (!_isInitialized || _isShowingAd) {
+    if (PurchaseService.instance.isPro || !_isInitialized || _isShowingAd) {
       return false;
     }
 

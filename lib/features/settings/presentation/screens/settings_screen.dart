@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../providers/settings_provider.dart';
@@ -8,6 +9,8 @@ import 'privacy_policy_screen.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../../core/ads/ad_helper.dart';
 import '../../../../core/ads/ad_service.dart';
+import '../../../../core/purchases/purchase_service.dart';
+import 'paywall_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -111,6 +114,15 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
         children: [
+          // SpendVibe Pro Status Banner
+          ValueListenableBuilder<bool>(
+            valueListenable: PurchaseService.instance.isProNotifier,
+            builder: (context, isPro, _) {
+              return _buildProCard(context, isDark, isPro);
+            },
+          ),
+          const SizedBox(height: 20),
+
           // Preferences Section
           _buildSectionHeader('Preferences', isDark),
           _buildTile(
@@ -141,8 +153,45 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          // Data Management Section
-          _buildSectionHeader('Data Management', isDark),
+          // Membership & Data Section
+          _buildSectionHeader('Membership & Data', isDark),
+          _buildTile(
+            context,
+            icon: Icons.workspace_premium_rounded,
+            iconColor: const Color(0xFFF59E0B),
+            title: 'SpendVibe Pro',
+            subtitle: 'Manage subscription or view lifetime perks',
+            onTap: () => PaywallSheet.show(context),
+            isDark: isDark,
+          ),
+          _buildTile(
+            context,
+            icon: Icons.restore_rounded,
+            iconColor: AppColors.primaryLight,
+            title: 'Restore Purchases',
+            subtitle: 'Sync active Google Play purchases and entitlements',
+            onTap: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Checking Google Play for previous purchases...')),
+              );
+              await PurchaseService.instance.restorePurchases();
+              if (context.mounted) {
+                if (PurchaseService.instance.isPro) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('SpendVibe Pro is active and restored!'),
+                      backgroundColor: AppColors.income,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No active purchases found for this account.')),
+                  );
+                }
+              }
+            },
+            isDark: isDark,
+          ),
           _buildTile(
             context,
             icon: Icons.file_download_outlined,
@@ -167,7 +216,26 @@ class SettingsScreen extends ConsumerWidget {
 
           // AdMob Testing Section (Visible during development/debug mode)
           if (AdHelper.isTestMode) ...[
-            _buildSectionHeader('AdMob Testing (Debug Only)', isDark),
+            _buildSectionHeader('AdMob & Billing Testing (Debug Only)', isDark),
+            ValueListenableBuilder<bool>(
+              valueListenable: PurchaseService.instance.isProNotifier,
+              builder: (context, isPro, _) {
+                return _buildTile(
+                  context,
+                  icon: Icons.star_half_rounded,
+                  iconColor: const Color(0xFFF59E0B),
+                  title: 'Toggle Pro Status (Debug)',
+                  subtitle: 'Current status: ${isPro ? "PRO ACTIVE (Ads Disabled)" : "FREE (Ads Active)"}',
+                  onTap: () {
+                    PurchaseService.instance.debugSetProStatus(!isPro);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Pro status switched to: ${!isPro}')),
+                    );
+                  },
+                  isDark: isDark,
+                );
+              },
+            ),
             _buildTile(
               context,
               icon: Icons.fullscreen_rounded,
@@ -178,7 +246,13 @@ class SettingsScreen extends ConsumerWidget {
                 final shown = AdService.instance.showInterstitialAd();
                 if (!shown && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Interstitial ad is loading... Please tap again in a few seconds.')),
+                    SnackBar(
+                      content: Text(
+                        PurchaseService.instance.isPro
+                            ? 'User is Pro! Interstitial ads are suppressed.'
+                            : 'Interstitial ad is loading... Please tap again in a few seconds.',
+                      ),
+                    ),
                   );
                 }
               },
@@ -194,7 +268,13 @@ class SettingsScreen extends ConsumerWidget {
                 final shown = AdService.instance.showAppOpenAdIfAvailable(ignoreCooldown: true);
                 if (!shown && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('App Open ad is loading... Please tap again in a few seconds.')),
+                    SnackBar(
+                      content: Text(
+                        PurchaseService.instance.isPro
+                            ? 'User is Pro! App Open ads are suppressed.'
+                            : 'App Open ad is loading... Please tap again in a few seconds.',
+                      ),
+                    ),
                   );
                 }
               },
@@ -223,12 +303,12 @@ class SettingsScreen extends ConsumerWidget {
             icon: Icons.info_outline_rounded,
             iconColor: AppColors.primary,
             title: 'About SpendVibe',
-            subtitle: 'Version 1.0.1 (Build 2)',
+            subtitle: 'Version 1.1.0 (Build 4)',
             onTap: () {
               showAboutDialog(
                 context: context,
                 applicationName: 'SpendVibe',
-                applicationVersion: '1.0.1',
+                applicationVersion: '1.1.0',
                 applicationIcon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -273,6 +353,189 @@ class SettingsScreen extends ConsumerWidget {
           letterSpacing: 1.1,
           color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
         ),
+      ),
+    );
+  }
+
+  Widget _buildProCard(BuildContext context, bool isDark, bool isPro) {
+    if (isPro) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFF59E0B).withAlpha(isDark ? 50 : 25),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF59E0B), Color(0xFFEC4899)],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'SpendVibe Pro',
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'ACTIVE',
+                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '100% Ad-Free • Supporter Status',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFEC4899)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withAlpha(80),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(50),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.workspace_premium, color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'SPENDVIBE PRO',
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(40),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'AD-FREE',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Enjoy Clean, Ad-Free Budgeting',
+            style: GoogleFonts.outfit(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Remove all ads forever. Choose flexible monthly or supporter lifetime access.',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: Colors.white.withAlpha(220),
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => PaywallSheet.show(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF4F46E5),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Upgrade Now',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward_rounded, size: 16),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

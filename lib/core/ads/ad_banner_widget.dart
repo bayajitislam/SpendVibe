@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../constants/app_colors.dart';
+import '../purchases/purchase_service.dart';
 import 'ad_helper.dart';
 
 /// Reusable banner ad widget that handles loading state, graceful collapse
@@ -28,6 +29,8 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
   }
 
   void _loadBanner() {
+    if (PurchaseService.instance.isPro) return;
+
     final adUnitId = AdHelper.bannerAdUnitId;
     if (adUnitId.isEmpty) return;
 
@@ -67,24 +70,35 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isAdLoaded || _bannerAd == null) {
-      return const SizedBox.shrink();
-    }
+    return ValueListenableBuilder<bool>(
+      valueListenable: PurchaseService.instance.isProNotifier,
+      builder: (context, isPro, child) {
+        if (isPro) {
+          _bannerAd?.dispose();
+          _bannerAd = null;
+          return const SizedBox.shrink();
+        }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+        if (!_isAdLoaded || _bannerAd == null) {
+          return const SizedBox.shrink();
+        }
 
-    return Container(
-      width: double.infinity,
-      color: isDark ? AppColors.darkBackground : AppColors.lightSurface,
-      alignment: Alignment.center,
-      child: Container(
-        width: _bannerAd!.size.width.toDouble(),
-        height: _bannerAd!.size.height.toDouble(),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceVariant,
-        ),
-        child: AdWidget(ad: _bannerAd!),
-      ),
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return Container(
+          width: double.infinity,
+          color: isDark ? AppColors.darkBackground : AppColors.lightSurface,
+          alignment: Alignment.center,
+          child: Container(
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceVariant,
+            ),
+            child: AdWidget(ad: _bannerAd!),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/ads/ad_service.dart';
+import 'core/purchases/purchase_service.dart';
 import 'core/constants/app_theme.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
 import 'screens/main_navigation_screen.dart';
@@ -11,6 +12,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final prefs = await SharedPreferences.getInstance();
+
+  // Initialize In-App Purchases & entitlement state
+  await PurchaseService.instance.initialize();
 
   // Initialize Google Mobile Ads SDK (AdMob)
   await AdService.instance.initialize();

@@ -20,3 +20,7 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 -dontwarn io.flutter.embedding.**
+
+# Google Play Billing
+-keep class com.android.billingclient.api.** { *; }
+-dontwarn com.android.billingclient.api.**

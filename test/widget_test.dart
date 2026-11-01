@@ -8,9 +8,12 @@ import 'package:spend_vibe/core/constants/app_categories.dart';
 import 'package:spend_vibe/features/budget/domain/entities/budget_entity.dart';
 import 'package:spend_vibe/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:spend_vibe/core/ads/ad_helper.dart';
+import 'package:spend_vibe/core/purchases/purchase_service.dart';
 import 'package:spend_vibe/features/settings/presentation/providers/settings_provider.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('SpendVibe Core Logic Unit Tests', () {
     test('CurrencyFormatter formats currency properly', () {
       expect(CurrencyFormatter.format(1250.50, symbol: '\$'), '\$1,250.50');
@@ -136,6 +139,22 @@ void main() {
       expect(AdHelper.appOpenAdUnitId, isNotEmpty);
       expect(AdHelper.rewardedAdUnitId, isNotEmpty);
       expect(AdHelper.rewardedInterstitialAdUnitId, isNotEmpty);
+    });
+
+    test('PurchaseService defines valid SKUs and manages Pro state', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      expect(PurchaseService.monthlySubscriptionId, 'spendvibe_pro_monthly');
+      expect(PurchaseService.lifetimeProductId, 'spendvibe_pro_lifetime');
+      expect(PurchaseService.allProductIds, contains('spendvibe_pro_monthly'));
+      expect(PurchaseService.allProductIds, contains('spendvibe_pro_lifetime'));
+
+      // Test Pro status toggle
+      expect(PurchaseService.instance.isPro, isFalse);
+      await PurchaseService.instance.debugSetProStatus(true);
+      expect(PurchaseService.instance.isPro, isTrue);
+      await PurchaseService.instance.debugSetProStatus(false);
+      expect(PurchaseService.instance.isPro, isFalse);
     });
   });
 }
