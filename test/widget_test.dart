@@ -7,6 +7,7 @@ import 'package:spend_vibe/core/utils/date_helpers.dart';
 import 'package:spend_vibe/core/constants/app_categories.dart';
 import 'package:spend_vibe/features/budget/domain/entities/budget_entity.dart';
 import 'package:spend_vibe/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:spend_vibe/core/ads/ad_helper.dart';
 import 'package:spend_vibe/features/settings/presentation/providers/settings_provider.dart';
 
 void main() {
@@ -125,6 +126,16 @@ void main() {
       await container.read(settingsProvider.notifier).setThemeMode(ThemeMode.dark);
       expect(container.read(settingsProvider).themeMode, ThemeMode.dark);
       expect(prefs.getString('selected_theme_mode'), 'dark');
+    });
+
+    test('AdHelper contains valid configuration and AdMob identifiers', () {
+      expect(AdHelper.androidAppId, 'ca-app-pub-2836689955524655~8511785450');
+      expect(AdHelper.nativeRewardedAdUnitId, 'ca-app-pub-2836689955524655/8867668787');
+      expect(AdHelper.bannerAdUnitId, isNotEmpty);
+      expect(AdHelper.interstitialAdUnitId, isNotEmpty);
+      expect(AdHelper.appOpenAdUnitId, isNotEmpty);
+      expect(AdHelper.rewardedAdUnitId, isNotEmpty);
+      expect(AdHelper.rewardedInterstitialAdUnitId, isNotEmpty);
     });
   });
 }

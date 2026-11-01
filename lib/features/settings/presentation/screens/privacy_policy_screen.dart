@@ -45,6 +45,15 @@ class PrivacyPolicyScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _buildCard(
             context,
+            icon: Icons.campaign_outlined,
+            iconColor: AppColors.primary,
+            title: 'Third-Party Ads (Google AdMob)',
+            content:
+                'SpendVibe displays advertisements provided by Google AdMob. While all your personal financial transactions, categories, and budgets remain 100% private and stored locally on your device, the Google Mobile Ads SDK may collect and process device identifiers, advertising IDs, and diagnostic data for ad serving and performance analytics in accordance with Google\'s Privacy Policy.',
+          ),
+          const SizedBox(height: 16),
+          _buildCard(
+            context,
             icon: Icons.contact_support_outlined,
             iconColor: AppColors.primaryLight,
             title: 'Contact Information',
@@ -54,7 +63,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Center(
             child: Text(
-              'Last updated: September 2026\nVersion 1.0.0 (Build 1)',
+              'Last updated: November 2026\nVersion 1.0.1 (Build 2)',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,

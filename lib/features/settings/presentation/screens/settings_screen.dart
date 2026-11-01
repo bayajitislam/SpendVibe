@@ -6,6 +6,8 @@ import '../providers/settings_provider.dart';
 import '../utils/csv_exporter.dart';
 import 'privacy_policy_screen.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
+import '../../../../core/ads/ad_helper.dart';
+import '../../../../core/ads/ad_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -163,6 +165,44 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          // AdMob Testing Section (Visible during development/debug mode)
+          if (AdHelper.isTestMode) ...[
+            _buildSectionHeader('AdMob Testing (Debug Only)', isDark),
+            _buildTile(
+              context,
+              icon: Icons.fullscreen_rounded,
+              iconColor: AppColors.primary,
+              title: 'Show Interstitial Ad',
+              subtitle: 'Test full-screen interstitial ad on demand',
+              onTap: () {
+                final shown = AdService.instance.showInterstitialAd();
+                if (!shown && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Interstitial ad is loading... Please tap again in a few seconds.')),
+                  );
+                }
+              },
+              isDark: isDark,
+            ),
+            _buildTile(
+              context,
+              icon: Icons.open_in_browser_rounded,
+              iconColor: AppColors.income,
+              title: 'Show App Open Ad',
+              subtitle: 'Test App Open ad on demand (ignores cooldown)',
+              onTap: () {
+                final shown = AdService.instance.showAppOpenAdIfAvailable(ignoreCooldown: true);
+                if (!shown && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('App Open ad is loading... Please tap again in a few seconds.')),
+                  );
+                }
+              },
+              isDark: isDark,
+            ),
+            const SizedBox(height: 24),
+          ],
+
           // About & Compliance
           _buildSectionHeader('About & Legal', isDark),
           _buildTile(
@@ -183,12 +223,12 @@ class SettingsScreen extends ConsumerWidget {
             icon: Icons.info_outline_rounded,
             iconColor: AppColors.primary,
             title: 'About SpendVibe',
-            subtitle: 'Version 1.0.0 (Build 1)',
+            subtitle: 'Version 1.0.1 (Build 2)',
             onTap: () {
               showAboutDialog(
                 context: context,
                 applicationName: 'SpendVibe',
-                applicationVersion: '1.0.0',
+                applicationVersion: '1.0.1',
                 applicationIcon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(

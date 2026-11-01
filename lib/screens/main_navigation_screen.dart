@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/ads/ad_banner_widget.dart';
 import '../core/constants/app_colors.dart';
 import '../features/transactions/presentation/screens/home_screen.dart';
 import '../features/analytics/presentation/screens/analytics_screen.dart';
@@ -32,16 +33,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-              width: 1,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AdBannerWidget(),
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  width: 1,
+                ),
+              ),
             ),
-          ),
-        ),
-        child: NavigationBar(
+            child: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: (index) {
             setState(() => _currentIndex = index);
@@ -72,6 +77,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ],
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 }

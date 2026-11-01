@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_categories.dart';
+import '../../../../core/ads/ad_service.dart';
 import '../../../../core/utils/date_helpers.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../providers/transaction_providers.dart';
@@ -106,6 +107,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             behavior: SnackBarBehavior.floating,
           ),
         );
+        // Trigger interstitial ad check (capped every 3 transactions)
+        AdService.instance.onTransactionAdded();
       }
     } catch (e) {
       if (mounted) {

@@ -39,9 +39,20 @@ You maintain complete ownership and control over your financial records:
 
 ---
 
-## 4. Third-Party Services & Links
+## 4. Advertising & Third-Party Services
 
-The current version of SpendVibe operates independently without third-party tracking, profiling, or analytical telemetry. When using the CSV Export feature, the App interacts with your operating system's native share sheet to allow you to send your export file to destinations of your choice (such as Google Drive, Email, or file managers).
+SpendVibe displays advertisements provided by **Google AdMob** (Google LLC). 
+
+While your financial records, income/expense transactions, notes, and budget limits remain 100% offline and stored exclusively on your local device, the Google Mobile Ads SDK may automatically collect and transmit certain technical data for ad serving, frequency capping, and fraud detection:
+- **Device & Advertising Identifiers**: (e.g., Google Advertising ID / GAID).
+- **Diagnostics & Analytics**: (Ad performance metrics, interaction statistics, and crash diagnostics).
+
+All ad-related data collection is governed by Google's Privacy Policy. You can review how Google uses data at:
+- [Google Privacy Policy](https://policies.google.com/privacy)
+- [How Google uses information from sites or apps that use their services](https://policies.google.com/technologies/partner-sites)
+
+### CSV Export & Sharing
+When using the CSV Export feature, the App interacts with your operating system's native share sheet to allow you to send your export file to destinations of your choice (such as Google Drive, Email, or file managers).
 
 ---
 
